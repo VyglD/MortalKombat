@@ -9,20 +9,23 @@ const getRandomDigit = ( start, end ) => {
     return Math.ceil( Math.random() * ( end - 1 ) ) + start;
 };
 
-const createPlayerObject = ( player, name, hp, img, weapon ) => {
-    return {
-        player,
-        name,
-        hp,
-        img,
-        weapon,
-        attack() {
-            console.log( `${this.name} Fight...` );
-        }
-    }
+const createReloadButton = () => {
+    const template = (`
+        <div class="reloadWrap">
+            <button class="button">Restart</button>
+        </div>
+    `);
+
+    const $reloadButton = createNode( template );
+
+    $reloadButton.addEventListener( 'click', () => {
+        window.location.reload();
+    } );
+
+    return $reloadButton;
 };
 
-const createPlayer = ( playerObject ) => {
+const createPlayerNode = ( playerObject ) => {
     const template = (`
         <div class="player${playerObject.player}">
             <div class="progressbar">
@@ -35,39 +38,80 @@ const createPlayer = ( playerObject ) => {
         </div>
     `);
 
-    const $playerNode = createNode( template );
-
-    playerObject.$playerNode = $playerNode;
-
-    return $playerNode;
+    return createNode( template );
 };
 
-const showWinTitle = ( player, $container, $actionButton ) => {
-    const template = (`
-        <div class="winTitle">${player.name} wins</div>
-    `);
+const changeHP = function( hpDiff ) {
+    if ( ( this.hp - hpDiff ) < 0 )
+    {
+        this.hp = 0;
+
+        return;
+    }
+
+    this.hp = this.hp - hpDiff;
+};
+
+const elHP = function() {
+    return this.$playerNode.querySelector( '.life' );
+};
+
+const renderHp = function() {
+    this.elHP().style.width = `${this.hp}%`; 
+};
+
+const createPlayerObject = ( player, name, hp, img, weapon ) => {
+    const playerObject = {
+        player,
+        name,
+        hp,
+        img,
+        weapon,
+        attack() {
+            console.log( `${this.name} Fight...` );
+        },
+        changeHP,
+        elHP,
+        renderHp,
+    };
+
+    playerObject.$playerNode = createPlayerNode( playerObject );
+
+    return playerObject;
+};
+
+const showResultText = ( player, $container, $actionButton ) => {
+    let template = '<div class="resultTitle">draw</div>';
+
+    if ( player )
+    {
+        template = (`
+            <div class="winTitle">${player.name} wins</div>
+        `);
+    }
 
     $container.appendChild( createNode( template ) );
-    $actionButton.disabled = true;
+    $actionButton.replaceWith( createReloadButton() );
 };
 
-const checkWinStatus = ( player1, player2, $container, $actionButton ) => {
-    if ( player1.hp === 0 )     
+const checkGameStatus = ( player1, player2, $container, $actionButton ) => {
+    if ( player1.hp === 0 && player1.hp < player2.hp )
     {
-        showWinTitle( player2, $container, $actionButton );
+        showResultText( player2, $container, $actionButton );
     }
-    else if ( player2.hp === 0 )
+    else if ( player2.hp === 0 && player2.hp < player1.hp )
     {
-        showWinTitle( player1, $container, $actionButton );
+        showResultText( player1, $container, $actionButton );
+    }
+    else if ( player1.hp === 0 && player2.hp === 0 )
+    {
+        showResultText( null, $container, $actionButton );
     }
 };
 
-const changeHP = ( playerObject ) => {
-    const $playerLife = playerObject.$playerNode.querySelector( '.life' );
-    let newHp = playerObject.hp - getRandomDigit( 1, 20 );
-    playerObject.hp = newHp < 0 ? 0 : newHp;
-
-    $playerLife.style.width = `${playerObject.hp}%`;
+const setGameStep = ( playerObject ) => {
+    playerObject.changeHP( getRandomDigit( 1, 20 ) );
+    playerObject.renderHp();
 };
 
 const player1 = createPlayerObject(
@@ -88,15 +132,15 @@ const player2 = createPlayerObject(
 const $arenas = document.querySelector( 'div.arenas' );
 const $randomButton = $arenas.querySelector( 'button.button' );
 
-$arenas.appendChild( createPlayer( player1 ) );
-$arenas.appendChild( createPlayer( player2 ) );
+$arenas.appendChild( player1.$playerNode );
+$arenas.appendChild( player2.$playerNode );
 
 $randomButton.addEventListener( 'click', () => {
     console.log( '###: Click Random Button' );
     
-    changeHP( player1 );
-    changeHP( player2 );
+    setGameStep( player1 );
+    setGameStep( player2 );
 
-    checkWinStatus( player1, player2, $arenas, $randomButton );
+    checkGameStatus( player1, player2, $arenas, $randomButton );
 } );
 
