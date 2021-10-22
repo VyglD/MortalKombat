@@ -1,3 +1,15 @@
+const HIT = {
+    head: 30,
+    body: 25,
+    foot: 20,
+};
+
+const ATTACK = ['head', 'body', 'foot'];
+
+const $arenas = document.querySelector( 'div.arenas' );
+const $randomButton = $arenas.querySelector( 'button.button' );
+const $formFight = document.querySelector( 'form.control' );
+
 const createNode = ( template ) => {
     const wrapper = document.createElement( 'div' );
     wrapper.innerHTML = template;
@@ -5,8 +17,8 @@ const createNode = ( template ) => {
     return wrapper.firstElementChild;
 };
 
-const getRandomDigit = ( start, end ) => {
-    return Math.ceil( Math.random() * ( end - 1 ) ) + start;
+const getRandomDigit = ( min, max ) => {
+    return Math.floor(Math.random() * (max - min) + min);
 };
 
 const createReloadButton = () => {
@@ -129,18 +141,65 @@ const player2 = createPlayerObject(
     ['knife'],
 );
 
-const $arenas = document.querySelector( 'div.arenas' );
-const $randomButton = $arenas.querySelector( 'button.button' );
-
 $arenas.appendChild( player1.$playerNode );
 $arenas.appendChild( player2.$playerNode );
 
-$randomButton.addEventListener( 'click', () => {
-    console.log( '###: Click Random Button' );
+// $randomButton.addEventListener( 'click', () => {
+//     console.log( '###: Click Random Button' );
     
-    setGameStep( player1 );
-    setGameStep( player2 );
+//     setGameStep( player1 );
+//     setGameStep( player2 );
 
-    checkGameStatus( player1, player2, $arenas, $randomButton );
+//     checkGameStatus( player1, player2, $arenas, $randomButton );
+// } );
+
+const enemyAttack = () => {
+    const hit = ATTACK[getRandomDigit( 0, 3 )];
+    const defence = ATTACK[getRandomDigit( 0, 3 )];
+
+    return {
+        value: getRandomDigit(1, HIT[hit]),
+        hit,
+        defence,
+    };
+}
+
+const setNewValue = ( value, playerObject ) => {
+    playerObject.changeHP( value );
+    playerObject.renderHp();
+};
+
+$formFight.addEventListener( 'submit', ( evt ) => {
+    evt.preventDefault();
+    const enemy = enemyAttack();
+
+    const attack = {};
+
+    for ( let item of $formFight)
+    {
+        if ( item.checked && item.name === 'hit' )
+        {
+            attack.value = getRandomDigit( 1, HIT[item.value] );
+            attack.hit = item.value;
+        }
+
+        if ( item.checked && item.name === 'defence' )
+        {
+            attack.defence = item.value;
+        }
+
+        item.checked = false;
+    }
+
+    if ( attack.hit !== enemy.defence )
+    {
+        setNewValue( attack.value, player2 );
+    }
+
+    if ( enemy.hit !== attack.defence )
+    {
+        setNewValue( enemy.value, player1 );
+    }
+
+    checkGameStatus( player1, player2, $arenas, $formFight );
 } );
-
