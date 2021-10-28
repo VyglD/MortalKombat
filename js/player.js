@@ -1,62 +1,57 @@
 import {createNode} from "./utils.js";
 
-const createPlayerNode = ( playerObject ) => {
-    const {player, hp, name, img} = playerObject;
+class Player {
+    constructor( {player, name, hp, img} ) {
+        this.player = player;
+        this.name = name;
+        this.hp = hp;
+        this.img = img;
 
-    const template = (`
-        <div class="player${player}">
-            <div class="progressbar">
-                <div class="life" style="width: ${hp}%"></div>
-                <div class="name">${name}</div>
-            </div>
-            <div class="character">
-                <img src="${img}" />
-            </div>
-        </div>
-    `);
-
-    return createNode( template );
-};
-
-const changeHP = function( hpDiff ) {
-    if ( ( this.hp - hpDiff ) < 0 )
-    {
-        this.hp = 0;
-
-        return;
+        this.$playerNode = this._createPlayerNode();
     }
 
-    this.hp = this.hp - hpDiff;
-};
+    elHP() {
+        return this.$playerNode.querySelector( '.life' );
+    }
 
-const elHP = function() {
-    return this.$playerNode.querySelector( '.life' );
-};
+    changeHP( hpDiff ) {
+        if ( ( this.hp - hpDiff ) < 0 )
+        {
+            this.hp = 0;
+    
+            return;
+        }
+    
+        this.hp = this.hp - hpDiff;
+    }
 
-const renderHp = function() {
-    this.elHP().style.width = `${this.hp}%`; 
-};
+    renderHp() {
+        this.elHP().style.width = `${this.hp}%`; 
+    }
+    
+    attack() {
+        console.log( `${this.name} Fight...` );
+    }
 
-const createPlayerObject = ( player, name, hp, img, weapon ) => {
-    const playerObject = {
-        player,
-        name,
-        hp,
-        img,
-        weapon,
-        attack() {
-            console.log( `${this.name} Fight...` );
-        },
-        changeHP,
-        elHP,
-        renderHp,
-    };
+    _createPlayerNode() {
+        const {player, hp, name, img} = this;
 
-    playerObject.$playerNode = createPlayerNode( playerObject );
+        const template = (`
+            <div class="player${player}">
+                <div class="progressbar">
+                    <div class="life" style="width: ${hp}%"></div>
+                    <div class="name">${name}</div>
+                </div>
+                <div class="character">
+                    <img src="${img}" />
+                </div>
+            </div>
+        `);
 
-    return playerObject;
-};
+        return createNode( template );
+    }
+}
 
 export {
-    createPlayerObject,
+    Player,
 };
