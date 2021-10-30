@@ -9,6 +9,10 @@ class Game {
         this.$formFight = document.querySelector( 'form.control' );
         this.$reloadButton = this._createReloadButton();
 
+        this._handleSubmit = this._handleSubmit.bind( this );
+    }
+
+    start() {
         this.player1 = new Player({
             player: 1,
             name: 'SCORPION',
@@ -22,10 +26,6 @@ class Game {
             img: 'http://reactmarathon-api.herokuapp.com/assets/kitana.gif',
         });
 
-        this._handleSubmit = this._handleSubmit.bind( this );
-    }
-
-    start() {
         this.$arenas.appendChild( this.player1.$playerNode );
         this.$arenas.appendChild( this.player2.$playerNode );
 
