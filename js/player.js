@@ -1,7 +1,7 @@
 import {createNode} from "./utils.js";
 
 class Player {
-    constructor( {player, name, hp, img} ) {
+    constructor( {name, hp, img}, player ) {
         this.player = player;
         this.name = name;
         this.hp = hp;

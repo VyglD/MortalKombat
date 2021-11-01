@@ -12,19 +12,17 @@ class Game {
         this._handleSubmit = this._handleSubmit.bind( this );
     }
 
-    start() {
-        this.player1 = new Player({
-            player: 1,
-            name: 'SCORPION',
-            hp: 100,
-            img: 'http://reactmarathon-api.herokuapp.com/assets/scorpion.gif',
-        });
-        this.player2 = new Player({
-            player: 2,
-            name: 'KITANA',
-            hp: 100,
-            img: 'http://reactmarathon-api.herokuapp.com/assets/kitana.gif',
-        });
+    async start() {
+        const player1 = JSON.parse( localStorage.getItem( 'player1' ) );
+        const player2 = JSON.parse( localStorage.getItem( 'player2' ) );
+
+        if ( !player1 || !player2 )
+        {
+            window.location.pathname = '/';
+        }
+
+        this.player1 = new Player( player1, 1 );
+        this.player2 = new Player( player2, 2 );
 
         this.$arenas.appendChild( this.player1.$playerNode );
         this.$arenas.appendChild( this.player2.$playerNode );
@@ -32,6 +30,11 @@ class Game {
         this.$formFight.addEventListener( 'submit', this._handleSubmit );
 
         generateLogs( 'start',  this.player1,  this.player2 );
+    }
+
+    async _getPlayers() {
+        return fetch( 'https://reactmarathon-api.herokuapp.com/api/mk/players' )
+            .then( ( response ) => response.json() );
     }
 
     _setNewValue ( typeAction, attackPlayerObject, defencePlayerObject, value = 0 ) {
@@ -43,11 +46,10 @@ class Game {
         generateLogs( typeAction, attackPlayerObject, defencePlayerObject, value );
     }
 
-    _handleSubmit( evt )
+    async _handleSubmit( evt )
     {
         evt.preventDefault();
-        const enemyAttackObject = this._enemyAttack();
-        const playerAttackObject = this._playerAttack();
+        const {enemyAttackObject, playerAttackObject} = await this._fight();
     
         if ( playerAttackObject.defence !== enemyAttackObject.hit )
         {
@@ -138,7 +140,43 @@ class Game {
             $item.checked = false;
         }
 
+        console.log( attack );
+
         return attack;
+    }
+
+    async _fight() {
+        const attack = {};
+
+        for ( let $item of this.$formFight )
+        {
+            if ( $item.checked && $item.name === 'hit' )
+            {
+                attack.hit = $item.value;
+            }
+
+            if ( $item.checked && $item.name === 'defence' )
+            {
+                attack.defence = $item.value;
+            }
+
+            $item.checked = false;
+        }
+
+        return await fetch(
+            'http://reactmarathon-api.herokuapp.com/api/mk/player/fight',
+            {
+                method: 'POST',
+                body: JSON.stringify(attack)
+            }
+        ).then( ( response ) => response.json() )
+        .then( ( data ) => {
+                
+            const enemyAttackObject = data.player1;
+            const playerAttackObject = data.player2;
+
+            return {enemyAttackObject, playerAttackObject};
+        } );
     }
 
     _createReloadButton() {
@@ -151,7 +189,7 @@ class Game {
         const $reloadButton = createNode( template );
 
         $reloadButton.addEventListener( 'click', () => {
-            window.location.reload();
+            window.location.pathname = '/';
         } );
 
         return $reloadButton;
